@@ -29,6 +29,7 @@ body {
     background: var(--background);
     font-family: Manrope, "Segoe UI", Arial, sans-serif;
     line-height: 1.6;
+    overflow-x: hidden;
 }
 
 a {
@@ -518,11 +519,11 @@ tbody tr:hover {
         flex-direction: column;
     }
 
-    .nav-container { align-items: flex-start; flex-direction: column; padding: 14px 0; }
-
-    .nav-links {
-        flex-wrap: wrap;
-        gap: 12px;
+    .nav-container { 
+        flex-direction: row; 
+        align-items: center; 
+        justify-content: space-between; 
+        padding: 14px 0; 
     }
 
     .app-shell {
@@ -538,3 +539,103 @@ tbody tr:hover {
     .feature-grid, .product-detail { grid-template-columns: 1fr; }
     .footer-inner { grid-template-columns: 1fr; text-align: center; }.footer-brand { justify-content: center; }.copyright { text-align: center; }
 }
+
+/* =========================================================
+   RESPONSIVE HAMBURGER NAVIGATION
+   ========================================================= */
+
+.nav-toggle {
+    display: none;
+}
+
+.nav-toggle-label {
+    display: none;
+    cursor: pointer;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 24px;
+    height: 18px;
+    z-index: 30;
+}
+
+.nav-toggle-label .hamburger-line {
+    display: block;
+    height: 2px;
+    width: 100%;
+    background-color: white;
+    border-radius: 2px;
+    transition: all 0.3s ease-in-out;
+}
+
+/* Enable swiping for store subnav on mobile */
+@media (max-width: 720px) {
+    .store-subnav > div {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        gap: 20px;
+        scrollbar-width: none; /* Hide scrollbar for clean UI on Firefox */
+    }
+    .store-subnav > div::-webkit-scrollbar {
+        display: none; /* Hide scrollbar for Chrome/Safari/Edge */
+    }
+}
+
+@media (max-width: 768px) {
+    .nav-toggle-label {
+        display: flex;
+    }
+    
+    .nav-links {
+        display: none;
+        flex-direction: column;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        width: 100%;
+        background: #293B62;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        border-bottom: 2px solid var(--primary);
+        padding: 20px;
+        box-shadow: 0 10px 15px rgba(0, 0, 0, 0.15);
+        gap: 12px;
+        align-items: stretch;
+        z-index: 19;
+    }
+    
+    .storefront .nav-links {
+        background: var(--store-navy);
+        border-bottom-color: var(--store-orange);
+    }
+    
+    .nav-links a {
+        width: 100%;
+        padding: 10px 15px;
+        border-bottom: none;
+        border-radius: 6px;
+        background: rgba(255, 255, 255, 0.05);
+    }
+    
+    .nav-links a:hover,
+    .nav-links a.active {
+        background: rgba(255, 255, 255, 0.15);
+    }
+    
+    .nav-links .nav-cta {
+        text-align: center;
+    }
+    
+    #nav-toggle:checked ~ .nav-links {
+        display: flex;
+    }
+    
+    #nav-toggle:checked + .nav-toggle-label .hamburger-line:nth-child(1) {
+        transform: translateY(8px) rotate(45deg);
+    }
+    #nav-toggle:checked + .nav-toggle-label .hamburger-line:nth-child(2) {
+        opacity: 0;
+    }
+    #nav-toggle:checked + .nav-toggle-label .hamburger-line:nth-child(3) {
+        transform: translateY(-8px) rotate(-45deg);
+    }
+}
+

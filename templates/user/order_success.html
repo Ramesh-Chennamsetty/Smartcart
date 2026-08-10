@@ -26,7 +26,7 @@
     <div class="product-actions">
         <a class="button" href="{{ url_for('user_products') }}">Continue shopping</a>
         <a class="button button-secondary" href="{{ url_for('my_orders') }}">View my orders</a>
-        <a class="button button-secondary" href="{{ url_for('download_invoice', order_id=order.order_id) }}">Download invoice</a>
+        <a class="button button-secondary" href="{{ url_for('download_invoice', order_id=order.order_id) }}" download>Download invoice</a>
     </div>
 </section>
 {% endblock %}

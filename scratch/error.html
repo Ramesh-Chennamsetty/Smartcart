@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="SmartCart product management">
+    <title>SmartCart | Smarter Product Management</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="">
+<header class="topbar ">
+    <div class="nav-container">
+        <a class="brand" href="/" aria-label="SmartCart home">
+            <span class="brand-icon"><img src="/static/images/r-logo.png" alt=""></span>
+            <span>Smart<span>Cart</span></span>
+        </a>
+
+        
+        <!-- Hamburger menu controls -->
+        <input type="checkbox" id="nav-toggle" class="nav-toggle" aria-label="Toggle navigation">
+        <label for="nav-toggle" class="nav-toggle-label">
+            <span class="hamburger-line"></span>
+            <span class="hamburger-line"></span>
+            <span class="hamburger-line"></span>
+        </label>
+
+        <nav class="nav-links" aria-label="Primary navigation">
+            <a class="active" href="/">Home</a>
+            
+                <a class="" href="/admin-login">Admin</a>
+                <a class="" href="/user-login">User login</a>
+                <a class="nav-cta" href="/user-register">Create account</a>
+            
+        </nav>
+    </div>
+</header>
+
+
+<main class="app-shell">
+    
+      
+    
+
+    
+<section class="hero">
+    <div class="hero-copy">
+        <span class="eyebrow">Your inventory, beautifully organized</span>
+        <h1>Manage products.<br><span>Shop smarter.</span></h1>
+        <p>SmartCart gives you one clean place to add, organize, and manage every product with confidence.</p>
+        <div class="hero-actions">
+            
+            <a class="button button-large" href="/admin-login">Admin Login</a>
+            <a class="button button-secondary button-large" href="/user-login">User Login</a>
+            
+        </div>
+    </div>
+    <div class="hero-visual" aria-hidden="true">
+        <div class="visual-card visual-card-main"><span>Inventory overview</span><strong>Everything in one place</strong><div class="visual-bars"><i></i><i></i><i></i><i></i></div></div>
+        <div class="floating-card"><b>✓</b><span>Products<br><strong>Easy to manage</strong></span></div>
+    </div>
+</section>
+
+<section class="feature-grid" aria-label="SmartCart benefits">
+    <article><span class="feature-icon">01</span><h2>Simple management</h2><p>Add, update, search, and organize products from an intuitive dashboard.</p></article>
+    <article><span class="feature-icon">02</span><h2>Clear product views</h2><p>Keep descriptions, pricing, categories, and images together and easy to find.</p></article>
+    <article><span class="feature-icon">03</span><h2>Built for speed</h2><p>A focused workflow that keeps everyday inventory tasks quick and effortless.</p></article>
+</section>
+
+</main>
+
+<footer class="site-footer">
+    <div class="footer-inner">
+        <a class="brand footer-brand" href="/"><span class="brand-icon"><img src="/static/images/r-logo.png" alt=""></span><span>Smart<span>Cart</span></span></a>
+        <p>Ramesh made with <span aria-label="love">❤️</span> using Flask</p>
+        <p class="copyright">&copy; 2026 SmartCart. All rights reserved.</p>
+    </div>
+</footer>
+
+</body>
+</html>

@@ -1,7 +1,73 @@
 from flask import Flask, render_template, request, redirect, session, flash, jsonify, make_response
 from flask_mail import Mail, Message
-import mysql.connector
-from mysql.connector import Error
+import sqlite3
+import decimal
+
+# Custom SQLite Wrapper to behave like mysql-connector
+class SQLiteCursorWrapper:
+    def __init__(self, cursor):
+        self._cursor = cursor
+
+    @property
+    def lastrowid(self):
+        return self._cursor.lastrowid
+
+    @property
+    def description(self):
+        return self._cursor.description
+
+    def execute(self, sql, params=None):
+        sql = sql.replace('%s', '?')
+        if params is not None:
+            # Convert decimal.Decimal in params to float for SQLite compatibility
+            clean_params = []
+            for p in params:
+                if isinstance(p, decimal.Decimal):
+                    clean_params.append(float(p))
+                else:
+                    clean_params.append(p)
+            self._cursor.execute(sql, clean_params)
+        else:
+            self._cursor.execute(sql)
+        return self
+
+    def fetchone(self):
+        return self._cursor.fetchone()
+
+    def fetchall(self):
+        return self._cursor.fetchall()
+
+    def close(self):
+        self._cursor.close()
+
+class SQLiteConnectionWrapper:
+    def __init__(self, db_path):
+        self._conn = sqlite3.connect(db_path, check_same_thread=False)
+        self._conn.row_factory = self._dict_factory
+
+    @staticmethod
+    def _dict_factory(cursor, row):
+        d = {}
+        for idx, col in enumerate(cursor.description):
+            d[col[0]] = row[idx]
+        return d
+
+    def cursor(self, dictionary=True):
+        return SQLiteCursorWrapper(self._conn.cursor())
+
+    def commit(self):
+        self._conn.commit()
+
+    def rollback(self):
+        self._conn.rollback()
+
+    def close(self):
+        self._conn.close()
+
+    def is_connected(self):
+        return True
+
+Error = sqlite3.Error
 import bcrypt
 import random
 import os
@@ -66,12 +132,8 @@ def get_razorpay_client():
 # =========================================================
 
 def get_db_connection():
-    return mysql.connector.connect(
-        host=config.DB_HOST,
-        user=config.DB_USER,
-        password=config.DB_PASSWORD,
-        database=config.DB_NAME
-    )
+    db_path = os.path.join(os.path.dirname(__file__), "smartcart.db")
+    return SQLiteConnectionWrapper(db_path)
 
 
 
@@ -1648,10 +1710,14 @@ def download_invoice(order_id):
         flash('Unable to generate PDF invoice.', 'danger')
         return redirect('/user/my-orders')
 
-    response = make_response(pdf_buffer.getvalue())
-    response.headers['Content-Type'] = 'application/pdf'
-    response.headers['Content-Disposition'] = f'attachment; filename=invoice_{order_id}.pdf'
-    return response
+    from flask import send_file
+    pdf_buffer.seek(0)
+    return send_file(
+        pdf_buffer,
+        as_attachment=True,
+        download_name=f"invoice_{order_id}.pdf",
+        mimetype="application/pdf"
+    )
 
 
 @app.route('/user/my-orders')
