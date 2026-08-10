@@ -1,7 +1,8 @@
-from flask import Flask, render_template, request, redirect, session, flash, jsonify, make_response
+from flask import Flask, render_template, request, redirect, session, flash, jsonify, make_response, url_for
 from flask_mail import Mail, Message
 import sqlite3
 import decimal
+import datetime
 
 # Custom SQLite Wrapper to behave like mysql-connector
 class SQLiteCursorWrapper:
@@ -44,6 +45,17 @@ class SQLiteConnectionWrapper:
     def __init__(self, db_path):
         self._conn = sqlite3.connect(db_path, check_same_thread=False)
         self._conn.row_factory = self._dict_factory
+        # Ensure password_resets table is created automatically
+        self._conn.execute("""
+        CREATE TABLE IF NOT EXISTS password_resets (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            email TEXT NOT NULL,
+            token TEXT NOT NULL,
+            expiry TEXT NOT NULL,
+            role TEXT NOT NULL
+        );
+        """)
+        self._conn.commit()
 
     @staticmethod
     def _dict_factory(cursor, row):
@@ -143,6 +155,288 @@ def get_db_connection():
 @app.route("/")
 def home():
     return render_template("index.html")
+
+
+# =========================================================
+# PASSWORD RESET ROUTES
+# =========================================================
+
+@app.route("/forgot-password", methods=["GET", "POST"])
+def forgot_password():
+    role = request.args.get("role", "user")
+    if role not in ["user", "admin"]:
+        role = "user"
+
+    if request.method == "GET":
+        return render_template("user/forgot_password.html", role=role)
+
+    email = request.form.get("email", "").strip().lower()
+    if not email:
+        flash("Email address is required.", "danger")
+        return redirect(url_for("forgot_password", role=role))
+
+    # Check if email exists in database
+    conn = None
+    cursor = None
+    user_exists = False
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        if role == "admin":
+            cursor.execute("SELECT admin_id FROM eadmin WHERE email = %s", (email,))
+        else:
+            cursor.execute("SELECT user_id FROM susers WHERE email = %s", (email,))
+        user_exists = cursor.fetchone() is not None
+    except Exception as e:
+        app.logger.exception("Database error checking email: %s", e)
+        flash("An error occurred. Please try again.", "danger")
+        return redirect(url_for("forgot_password", role=role))
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
+    # Generate OTP and store it
+    otp = str(random.randint(100000, 999999))
+    expiry = (datetime.datetime.utcnow() + datetime.timedelta(minutes=15)).isoformat()
+
+    if user_exists:
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            # Clean up old tokens first
+            cursor.execute("DELETE FROM password_resets WHERE email = %s AND role = %s", (email, role))
+            cursor.execute(
+                "INSERT INTO password_resets (email, token, expiry, role) VALUES (%s, %s, %s, %s)",
+                (email, otp, expiry, role)
+            )
+            conn.commit()
+
+            # Send Email
+            msg = Message(
+                subject="SmartCart Password Reset Code",
+                sender=app.config["MAIL_USERNAME"],
+                recipients=[email],
+                body=(
+                    f"Your password reset code is: {otp}\n\n"
+                    "This code will expire in 15 minutes. Do not share it with anyone."
+                )
+            )
+            mail.send(msg)
+        except Exception as e:
+            app.logger.exception("Error sending password reset email: %s", e)
+            # Do not display error to user, just proceed to verify page
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
+
+    # Flash message and redirect (always show success to avoid user enumeration)
+    flash("If that email is registered, we have sent a 6-digit password reset code to it.", "success")
+    return render_template("user/verify_reset_otp.html", email=email, role=role)
+
+
+@app.route("/verify-reset-otp", methods=["POST"])
+def verify_reset_otp():
+    email = request.form.get("email", "").strip().lower()
+    role = request.form.get("role", "user")
+    otp = request.form.get("otp", "").strip()
+
+    if not email or not otp:
+        flash("Email and code are required.", "danger")
+        return redirect(url_for("forgot_password", role=role))
+
+    conn = None
+    cursor = None
+    reset_record = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT * FROM password_resets WHERE email = %s AND token = %s AND role = %s",
+            (email, otp, role)
+        )
+        reset_record = cursor.fetchone()
+    except Exception as e:
+        app.logger.exception("Error checking reset OTP: %s", e)
+        flash("An error occurred. Please try again.", "danger")
+        return redirect(url_for("forgot_password", role=role))
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
+    if not reset_record:
+        flash("Invalid reset code. Please try again.", "danger")
+        return render_template("user/verify_reset_otp.html", email=email, role=role)
+
+    # Check expiry
+    expiry_time = datetime.datetime.fromisoformat(reset_record["expiry"])
+    if datetime.datetime.utcnow() > expiry_time:
+        flash("Reset code has expired. Please request a new one.", "danger")
+        return redirect(url_for("forgot_password", role=role))
+
+    # OTP is valid! Convert it to a secure unique token for the final reset form
+    secure_token = uuid.uuid4().hex
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "UPDATE password_resets SET token = %s WHERE email = %s AND role = %s",
+            (secure_token, email, role)
+        )
+        conn.commit()
+    except Exception as e:
+        app.logger.exception("Error updating reset token: %s", e)
+        flash("An error occurred. Please try again.", "danger")
+        return redirect(url_for("forgot_password", role=role))
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
+    return render_template("user/reset_password.html", email=email, role=role, token=secure_token)
+
+
+@app.route("/resend-reset-otp", methods=["POST"])
+def resend_reset_otp():
+    email = request.form.get("email", "").strip().lower()
+    role = request.form.get("role", "user")
+
+    if not email:
+        flash("Email is required.", "danger")
+        return redirect(url_for("forgot_password", role=role))
+
+    # Generate new OTP and update
+    otp = str(random.randint(100000, 999999))
+    expiry = (datetime.datetime.utcnow() + datetime.timedelta(minutes=15)).isoformat()
+
+    conn = None
+    cursor = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM password_resets WHERE email = %s AND role = %s", (email, role))
+        cursor.execute(
+            "INSERT INTO password_resets (email, token, expiry, role) VALUES (%s, %s, %s, %s)",
+            (email, otp, expiry, role)
+        )
+        conn.commit()
+
+        # Send Email
+        msg = Message(
+            subject="SmartCart Password Reset Code",
+            sender=app.config["MAIL_USERNAME"],
+            recipients=[email],
+            body=(
+                f"Your new password reset code is: {otp}\n\n"
+                "This code will expire in 15 minutes. Do not share it with anyone."
+            )
+        )
+        mail.send(msg)
+        flash("A new reset code has been sent to your email.", "success")
+    except Exception as e:
+        app.logger.exception("Error resending password reset email: %s", e)
+        flash("Unable to resend code. Please try again.", "danger")
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
+    return render_template("user/verify_reset_otp.html", email=email, role=role)
+
+
+@app.route("/reset-password", methods=["POST"])
+def reset_password():
+    email = request.form.get("email", "").strip().lower()
+    role = request.form.get("role", "user")
+    token = request.form.get("token", "").strip()
+    password = request.form.get("password", "")
+    confirm_password = request.form.get("confirm_password", "")
+
+    if not email or not token or not password:
+        flash("Missing required fields.", "danger")
+        return redirect(url_for("forgot_password", role=role))
+
+    if password != confirm_password:
+        flash("Passwords do not match.", "danger")
+        return render_template("user/reset_password.html", email=email, role=role, token=token)
+
+    if len(password) < 6:
+        flash("Password must be at least 6 characters long.", "danger")
+        return render_template("user/reset_password.html", email=email, role=role, token=token)
+
+    # Verify the token is valid
+    conn = None
+    cursor = None
+    reset_record = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT * FROM password_resets WHERE email = %s AND token = %s AND role = %s",
+            (email, token, role)
+        )
+        reset_record = cursor.fetchone()
+    except Exception as e:
+        app.logger.exception("Error verifying reset token: %s", e)
+        flash("An error occurred. Please try again.", "danger")
+        return redirect(url_for("forgot_password", role=role))
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
+    if not reset_record:
+        flash("Invalid or expired password reset session.", "danger")
+        return redirect(url_for("forgot_password", role=role))
+
+    # Check expiry
+    expiry_time = datetime.datetime.fromisoformat(reset_record["expiry"])
+    if datetime.datetime.utcnow() > expiry_time:
+        flash("Password reset session has expired. Please start over.", "danger")
+        return redirect(url_for("forgot_password", role=role))
+
+    # Hash the new password and update in appropriate table
+    hashed_password = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode()
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        if role == "admin":
+            cursor.execute(
+                "UPDATE eadmin SET password = %s WHERE email = %s",
+                (hashed_password, email)
+            )
+        else:
+            cursor.execute(
+                "UPDATE susers SET password = %s WHERE email = %s",
+                (hashed_password, email)
+            )
+        # Delete reset token so it cannot be reused
+        cursor.execute("DELETE FROM password_resets WHERE email = %s AND role = %s", (email, role))
+        conn.commit()
+        flash("Your password has been reset successfully! You can now log in.", "success")
+    except Exception as e:
+        app.logger.exception("Error resetting password in DB: %s", e)
+        flash("An error occurred. Please try again.", "danger")
+        return redirect(url_for("forgot_password", role=role))
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
+    if role == "admin":
+        return redirect(url_for("admin_login"))
+    else:
+        return redirect(url_for("user_login"))
 
 
 

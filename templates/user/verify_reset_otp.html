@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Verify Reset Code | SmartCart{% endblock %}
+{% block content %}
+<section class="card auth-card">
+    <span class="eyebrow">Account Recovery</span>
+    <h1>Verify Reset Code</h1>
+    <p class="page-subtitle">We have sent a 6-digit password reset code to <strong>{{ email }}</strong>. It will expire in 15 minutes.</p>
+    <form method="post" action="{{ url_for('verify_reset_otp') }}">
+        <input type="hidden" name="email" value="{{ email }}">
+        <input type="hidden" name="role" value="{{ role }}">
+        <div class="field">
+            <label for="otp">Enter 6-digit Code</label>
+            <input id="otp" name="otp" type="text" pattern="[0-9]{6}" maxlength="6" placeholder="######" style="text-align: center; font-size: 1.5rem; letter-spacing: 0.5rem;" required>
+        </div>
+        <button type="submit">Verify Code</button>
+    </form>
+    <form method="post" action="{{ url_for('resend_reset_otp') }}" style="margin-top: 15px;">
+        <input type="hidden" name="email" value="{{ email }}">
+        <input type="hidden" name="role" value="{{ role }}">
+        <button type="submit" class="button-secondary" style="width: 100%;">Resend Code</button>
+    </form>
+</section>
+{% endblock %}

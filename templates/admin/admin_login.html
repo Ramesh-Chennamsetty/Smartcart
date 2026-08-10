@@ -20,6 +20,9 @@
                    name="password"
                    autocomplete="current-password"
                    required>
+            <div style="margin-top: 8px; text-align: right;">
+                <a href="{{ url_for('forgot_password', role='admin') }}" style="font-size: 0.85rem;">Forgot Password?</a>
+            </div>
         </div>
 
         <button type="submit">Login</button>

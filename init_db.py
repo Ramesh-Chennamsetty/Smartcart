@@ -73,6 +73,16 @@ def init_db():
     );
     """)
 
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS password_resets (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        email TEXT NOT NULL,
+        token TEXT NOT NULL,
+        expiry TEXT NOT NULL,
+        role TEXT NOT NULL
+    );
+    """)
+
     # Seed admin accounts
     print("Seeding admin accounts...")
     admin_pw_1 = bcrypt.hashpw(b"password123", bcrypt.gensalt()).decode()
