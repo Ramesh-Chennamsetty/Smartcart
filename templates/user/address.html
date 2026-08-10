@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Delivery Address | SmartCart{% endblock %}
+{% block content %}
+<div class="checkout-steps" aria-label="Checkout progress"><span class="complete">1. Cart</span><span class="active">2. Address</span><span>3. Payment</span></div>
+<section class="card checkout-card">
+    <span class="eyebrow">Delivery details</span>
+    <h1>Where should we deliver?</h1>
+    <p class="page-subtitle">Enter the address where you would like to receive your order.</p>
+    <form method="post" action="{{ url_for('user_pay') }}">
+        <div class="checkout-form-grid">
+            <div class="field full-width"><label for="full_name">Full name</label><input id="full_name" name="full_name" type="text" autocomplete="name" required maxlength="100" value="{{ address.get('full_name', session.get('user_name', '')) }}"></div>
+            <div class="field full-width"><label for="phone">Phone number</label><input id="phone" name="phone" type="tel" inputmode="numeric" autocomplete="tel" required minlength="10" maxlength="15" pattern="[0-9]{10,15}" value="{{ address.get('phone', '') }}"></div>
+            <div class="field full-width"><label for="address_line">Street address</label><textarea id="address_line" name="address_line" autocomplete="street-address" required maxlength="250" placeholder="House or flat number, street, area, landmark">{{ address.get('address_line', '') }}</textarea></div>
+            <div class="field"><label for="city">City</label><input id="city" name="city" type="text" autocomplete="address-level2" required maxlength="80" value="{{ address.get('city', '') }}"></div>
+            <div class="field"><label for="state">State</label><input id="state" name="state" type="text" autocomplete="address-level1" required maxlength="80" value="{{ address.get('state', '') }}"></div>
+            <div class="field full-width"><label for="postal_code">Postal / PIN code</label><input id="postal_code" name="postal_code" type="text" inputmode="numeric" autocomplete="postal-code" required minlength="4" maxlength="10" pattern="[0-9]{4,10}" value="{{ address.get('postal_code', '') }}"></div>
+        </div>
+        <div class="checkout-total"><span>Amount payable</span><strong>&#8377;{{ '%.2f'|format(grand_total) }}</strong></div>
+        <div class="checkout-actions"><a class="button button-secondary" href="{{ url_for('user_cart') }}">Back to cart</a><button type="submit">Pay Now</button></div>
+    </form>
+</section>
+{% endblock %}

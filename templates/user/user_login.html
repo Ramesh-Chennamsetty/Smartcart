@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}User Login | SmartCart{% endblock %}
+{% block content %}
+<section class="card auth-card">
+    <span class="eyebrow">Welcome back</span>
+    <h1>User login</h1>
+    <p class="page-subtitle">Sign in to access your SmartCart dashboard.</p>
+    <form method="post" action="{{ url_for('user_login') }}">
+        <div class="field"><label for="email">Email address</label><input id="email" name="email" type="email" autocomplete="email" required></div>
+        <div class="field"><label for="password">Password</label><input id="password" name="password" type="password" autocomplete="current-password" required></div>
+        <button type="submit">Login</button>
+    </form>
+    <p class="auth-switch">New to SmartCart? <a href="{{ url_for('user_register') }}">Create an account</a>.</p>
+</section>
+{% endblock %}

@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Shop Products | SmartCart{% endblock %}
+{% block content %}
+<div class="catalogue-heading"><div><span class="eyebrow">SmartCart marketplace</span><h1>Find your next favourite</h1><p>Browse our latest collection and add what you love.</p></div><div class="result-chip">{{ products|length }} product{{ '' if products|length == 1 else 's' }}</div></div>
+<form class="catalogue-filter" method="get" action="{{ url_for('user_products') }}">
+    <input type="search" name="search" placeholder="What are you looking for?" aria-label="Search products" value="{{ request.args.get('search', '') }}">
+    <select name="category" aria-label="Filter by category">
+        <option value="">All categories</option>
+        {% for cat in categories %}<option value="{{ cat.category }}" {% if request.args.get('category') == cat.category %}selected{% endif %}>{{ cat.category }}</option>{% endfor %}
+    </select>
+    <button type="submit">Apply filters</button>
+    {% if request.args.get('search') or request.args.get('category') %}<a class="clear-filter" href="{{ url_for('user_products') }}">Clear all</a>{% endif %}
+</form>
+{% if products %}
+<div class="product-grid">
+    {% for product in products %}
+    <article class="shop-product-card">
+        <div class="card-badge">Featured</div><a class="product-media" href="{{ url_for('user_product_details', product_id=product.product_id) }}">
+            {% if product.image %}<img src="{{ url_for('static', filename='uploads/product_images/' ~ product.image) }}" alt="{{ product.name }}">{% else %}<span>No image available</span>{% endif %}
+        </a>
+        <div class="product-card-body"><span class="product-category">{{ product.category }}</span><h2>{{ product.name }}</h2><div class="rating-row"><span>&#9733;&#9733;&#9733;&#9733;&#9733;</span><small>Popular choice</small></div><div class="price-row"><p class="product-price"><sup>&#8377;</sup>{{ product.price }}</p><span>Great value</span></div><div class="product-actions"><a class="button button-secondary" href="{{ url_for('user_product_details', product_id=product.product_id) }}">View</a><button class="add-cart-button" type="button" data-url="{{ url_for('add_to_cart', product_id=product.product_id) }}">Add to cart</button><form method="post" action="{{ url_for('add_to_cart', product_id=product.product_id) }}"><button class="button-buy" type="submit">Buy now</button></form></div></div>
+    </article>
+    {% endfor %}
+</div>
+{% else %}<div class="card empty-state store-empty"><div class="empty-icon">&#128269;</div><h2>No products found</h2><p>Try another search or remove your filters.</p><a class="button" href="{{ url_for('user_products') }}">View all products</a></div>{% endif %}
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='cart.js') }}"></script>{% endblock %}

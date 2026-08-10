@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Profile | SmartCart{% endblock %}
+
+{% block content %}
+<section class="card form-card">
+    <div class="page-header">
+        <div>
+            <h1>Admin Profile</h1>
+            <p class="page-subtitle">Manage your account information.</p>
+        </div>
+    </div>
+
+    {% if admin.profile_image %}
+    <img class="profile-image"
+         src="{{ url_for('static', filename='uploads/admin_profiles/' ~ admin.profile_image) }}"
+         alt="{{ admin.name }}">
+    {% else %}
+    <p class="muted">No profile image uploaded.</p>
+    {% endif %}
+
+    <form method="POST"
+          action="{{ url_for('admin_profile') }}"
+          enctype="multipart/form-data">
+        <div class="field">
+            <label for="name">Name</label>
+            <input id="name"
+                   type="text"
+                   name="name"
+                   value="{{ admin.name }}"
+                   required>
+        </div>
+
+        <div class="field">
+            <label for="email">Email</label>
+            <input id="email"
+                   type="email"
+                   name="email"
+                   value="{{ admin.email }}"
+                   required>
+        </div>
+
+        <div class="field">
+            <label for="password">New Password (optional)</label>
+            <input id="password" type="password" name="password" minlength="6">
+        </div>
+
+        <div class="field">
+            <label for="profile_image">Replace Profile Image (optional)</label>
+            <input id="profile_image"
+                   type="file"
+                   name="profile_image"
+                   accept=".jpg,.jpeg,.png,.gif,.webp,image/*">
+        </div>
+
+        <div class="form-actions">
+            <button type="submit">Update Profile</button>
+            <a class="button button-secondary" href="{{ url_for('admin_dashboard') }}">Cancel</a>
+        </div>
+    </form>
+</section>
+{% endblock %}

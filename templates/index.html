@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}SmartCart | Smarter Product Management{% endblock %}
+{% block content %}
+<section class="hero">
+    <div class="hero-copy">
+        <span class="eyebrow">Your inventory, beautifully organized</span>
+        <h1>Manage products.<br><span>Shop smarter.</span></h1>
+        <p>SmartCart gives you one clean place to add, organize, and manage every product with confidence.</p>
+        <div class="hero-actions">
+            {% if session.get('admin_id') %}
+            <a class="button button-large" href="{{ url_for('admin_dashboard') }}">Open dashboard</a>
+            <a class="button button-secondary button-large" href="{{ url_for('view_products') }}">View products</a>
+            {% elif session.get('user_id') %}
+            <a class="button button-large" href="{{ url_for('user_dashboard') }}">Continue shopping</a>
+            <a class="button button-secondary button-large" href="{{ url_for('user_cart') }}">View my cart</a>
+            {% else %}
+            <a class="button button-large" href="{{ url_for('admin_login') }}">Admin Login</a>
+            <a class="button button-secondary button-large" href="{{ url_for('user_login') }}">User Login</a>
+            {% endif %}
+        </div>
+    </div>
+    <div class="hero-visual" aria-hidden="true">
+        <div class="visual-card visual-card-main"><span>Inventory overview</span><strong>Everything in one place</strong><div class="visual-bars"><i></i><i></i><i></i><i></i></div></div>
+        <div class="floating-card"><b>✓</b><span>Products<br><strong>Easy to manage</strong></span></div>
+    </div>
+</section>
+
+<section class="feature-grid" aria-label="SmartCart benefits">
+    <article><span class="feature-icon">01</span><h2>Simple management</h2><p>Add, update, search, and organize products from an intuitive dashboard.</p></article>
+    <article><span class="feature-icon">02</span><h2>Clear product views</h2><p>Keep descriptions, pricing, categories, and images together and easy to find.</p></article>
+    <article><span class="feature-icon">03</span><h2>Built for speed</h2><p>A focused workflow that keeps everyday inventory tasks quick and effortless.</p></article>
+</section>
+{% endblock %}

@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}My Orders | SmartCart{% endblock %}
+{% block content %}
+<div class="catalogue-heading"><div><span class="eyebrow">Purchase history</span><h1>My Orders</h1><p>Review your SmartCart purchases and payment status.</p></div></div>
+{% if orders %}
+<div class="order-list">
+    {% for order in orders %}
+    <article class="card order-card">
+        <div><span class="eyebrow">Order #{{ order.order_id }}</span><h2>&#8377;{{ '%.2f'|format(order.amount) }}</h2></div>
+        <p><strong>Status:</strong> {{ order.payment_status|title }}</p>
+        <p><strong>Placed:</strong> {{ order.created_at }}</p>
+        <div class="product-actions">
+            <a class="button button-secondary" href="{{ url_for('order_success', database_order_id=order.order_id) }}">View order details</a>
+            <a class="button button-secondary" href="{{ url_for('download_invoice', order_id=order.order_id) }}">Download invoice</a>
+        </div>
+    </article>
+    {% endfor %}
+</div>
+{% else %}
+<div class="card empty-state"><h2>No orders yet</h2><p>Your completed orders will appear here.</p><a class="button" href="{{ url_for('user_products') }}">Start shopping</a></div>
+{% endif %}
+{% endblock %}

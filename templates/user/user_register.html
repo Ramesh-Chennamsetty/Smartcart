@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Create Account | SmartCart{% endblock %}
+{% block content %}
+<section class="card auth-card">
+    <span class="eyebrow">Join SmartCart</span>
+    <h1>Create your account</h1>
+    <p class="page-subtitle">Register to start exploring products.</p>
+    <form method="post" action="{{ url_for('user_register') }}">
+        <div class="field"><label for="name">Full name</label><input id="name" name="name" type="text" autocomplete="name" required maxlength="100"></div>
+        <div class="field"><label for="email">Email address</label><input id="email" name="email" type="email" autocomplete="email" required maxlength="150"></div>
+        <div class="field"><label for="password">Password</label><input id="password" name="password" type="password" autocomplete="new-password" required minlength="6"></div>
+        <div class="field"><label for="confirm_password">Confirm password</label><input id="confirm_password" name="confirm_password" type="password" autocomplete="new-password" required minlength="6"></div>
+        <button type="submit">Create account</button>
+    </form>
+    <p class="auth-switch">Already registered? <a href="{{ url_for('user_login') }}">Login here</a>.</p>
+</section>
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Login | SmartCart{% endblock %}
+
+{% block content %}
+<section class="card auth-card">
+    <h1>Admin Login</h1>
+    <p class="page-subtitle">Sign in to manage SmartCart.</p>
+
+    <form method="POST" action="{{ url_for('admin_login') }}">
+        <div class="field">
+            <label for="email">Email</label>
+            <input id="email" type="email" name="email" autocomplete="email" required>
+        </div>
+
+        <div class="field">
+            <label for="password">Password</label>
+            <input id="password"
+                   type="password"
+                   name="password"
+                   autocomplete="current-password"
+                   required>
+        </div>
+
+        <button type="submit">Login</button>
+    </form>
+
+    <p class="muted">
+        New admin?
+        <a href="{{ url_for('admin_signup') }}">Create an account</a>
+    </p>
+</section>
+{% endblock %}

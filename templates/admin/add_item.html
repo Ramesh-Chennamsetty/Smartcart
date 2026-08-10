@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Add Product | SmartCart{% endblock %}
+
+{% block content %}
+<section class="card form-card">
+    <div class="page-header">
+        <div>
+            <h1>Add Product</h1>
+            <p class="page-subtitle">Enter the new product information.</p>
+        </div>
+    </div>
+
+    <form method="POST"
+          action="{{ url_for('add_item') }}"
+          enctype="multipart/form-data">
+        <div class="field">
+            <label for="name">Product Name</label>
+            <input id="name" type="text" name="name" maxlength="150" required>
+        </div>
+
+        <div class="field">
+            <label for="description">Description</label>
+            <textarea id="description" name="description" required></textarea>
+        </div>
+
+        <div class="field">
+            <label for="category">Category</label>
+            <input id="category" type="text" name="category" maxlength="100" required>
+        </div>
+
+        <div class="field">
+            <label for="price">Price</label>
+            <input id="price" type="number" name="price" min="0" step="0.01" required>
+        </div>
+
+        <div class="field">
+            <label for="image">Product Image</label>
+            <input id="image"
+                   type="file"
+                   name="image"
+                   accept=".jpg,.jpeg,.png,.gif,.webp,image/*"
+                   required>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit">Add Product</button>
+            <a class="button button-secondary" href="{{ url_for('view_products') }}">Cancel</a>
+        </div>
+    </form>
+</section>
+{% endblock %}

@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Product | SmartCart{% endblock %}
+
+{% block content %}
+<section class="card form-card">
+    <div class="page-header">
+        <div>
+            <h1>Edit Product</h1>
+            <p class="page-subtitle">Update product #{{ product.product_id }}.</p>
+        </div>
+    </div>
+
+    <form method="POST"
+          action="{{ url_for('update_item', item_id=product.product_id) }}"
+          enctype="multipart/form-data">
+        <div class="field">
+            <label for="name">Product Name</label>
+            <input id="name"
+                   type="text"
+                   name="name"
+                   maxlength="150"
+                   value="{{ product.name }}"
+                   required>
+        </div>
+
+        <div class="field">
+            <label for="description">Description</label>
+            <textarea id="description" name="description" required>{{ product.description }}</textarea>
+        </div>
+
+        <div class="field">
+            <label for="category">Category</label>
+            <input id="category"
+                   type="text"
+                   name="category"
+                   maxlength="100"
+                   value="{{ product.category }}"
+                   required>
+        </div>
+
+        <div class="field">
+            <label for="price">Price</label>
+            <input id="price"
+                   type="number"
+                   name="price"
+                   min="0"
+                   step="0.01"
+                   value="{{ product.price }}"
+                   required>
+        </div>
+
+        {% if product.image %}
+        <div class="field">
+            <label>Current Image</label>
+            <img class="product-image"
+                 src="{{ url_for('static', filename='uploads/product_images/' ~ product.image) }}"
+                 alt="{{ product.name }}">
+        </div>
+        {% endif %}
+
+        <div class="field">
+            <label for="image">Replace Image (optional)</label>
+            <input id="image"
+                   type="file"
+                   name="image"
+                   accept=".jpg,.jpeg,.png,.gif,.webp,image/*">
+        </div>
+
+        <div class="form-actions">
+            <button type="submit">Save Changes</button>
+            <a class="button button-secondary" href="{{ url_for('view_products') }}">Cancel</a>
+        </div>
+    </form>
+</section>
+{% endblock %}

@@ -1,0 +1,7 @@
+Flask
+Flask-Mail
+mysql-connector-python
+bcrypt
+razorpay==2.0.1
+python-dotenv==1.2.2
+xhtml2pdf

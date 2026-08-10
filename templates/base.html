@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="SmartCart product management">
+    <title>{% block title %}SmartCart{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="{% if session.get('user_id') %}storefront{% endif %}">
+<header class="topbar {% if session.get('user_id') %}store-topbar{% endif %}">
+    <div class="nav-container">
+        <a class="brand" href="{{ url_for('home') }}" aria-label="SmartCart home">
+            <span class="brand-icon"><img src="{{ url_for('static', filename='images/r-logo.png') }}" alt=""></span>
+            <span>Smart<span>Cart</span></span>
+        </a>
+
+        {% if session.get('user_id') %}
+        <form class="header-search" action="{{ url_for('user_products') }}" method="get">
+            <label class="sr-only" for="header-search-input">Search products</label>
+            <input id="header-search-input" name="search" type="search" placeholder="Search SmartCart products" value="{{ request.args.get('search', '') if request.endpoint == 'user_products' else '' }}">
+            <button type="submit" aria-label="Search">Search</button>
+        </form>
+        {% endif %}
+        <nav class="nav-links" aria-label="Primary navigation">
+            <a class="{{ 'active' if request.endpoint == 'home' else '' }}" href="{{ url_for('home') }}">Home</a>
+            {% if session.get('admin_id') %}
+                <a class="{{ 'active' if request.endpoint == 'admin_dashboard' else '' }}" href="{{ url_for('admin_dashboard') }}">Dashboard</a>
+                <a class="{{ 'active' if request.endpoint in ['view_products', 'item_list', 'view_item', 'update_item_page'] else '' }}" href="{{ url_for('view_products') }}">Products</a>
+                <a class="{{ 'active' if request.endpoint == 'add_item_page' else '' }}" href="{{ url_for('add_item_page') }}">Add Product</a>
+                <a class="{{ 'active' if request.endpoint == 'admin_profile' else '' }}" href="{{ url_for('admin_profile') }}">Profile</a>
+                <a class="nav-cta" href="{{ url_for('admin_logout') }}">Logout</a>
+            {% elif session.get('user_id') %}
+                <a class="nav-cta {{ 'active' if request.endpoint == 'user_products' else '' }}" href="{{ url_for('user_products') }}">Shop Now</a>
+                <a class="{{ 'active' if request.endpoint in ['my_orders', 'order_success'] else '' }}" href="{{ url_for('my_orders') }}">My Orders</a>
+                <a class="cart-link {{ 'active' if request.endpoint == 'user_cart' else '' }}" href="{{ url_for('user_cart') }}"><span class="cart-icon">&#128722;</span><strong>Cart</strong><span class="cart-badge" id="cart-count">{{ cart_count }}</span></a>
+                <a class="logout-link" href="{{ url_for('user_logout') }}">Sign out</a>
+            {% else %}
+                <a class="{{ 'active' if request.endpoint == 'admin_login' else '' }}" href="{{ url_for('admin_login') }}">Admin</a>
+                <a class="{{ 'active' if request.endpoint == 'user_login' else '' }}" href="{{ url_for('user_login') }}">User login</a>
+                <a class="nav-cta" href="{{ url_for('user_register') }}">Create account</a>
+            {% endif %}
+        </nav>
+    </div>
+</header>
+{% if session.get('user_id') %}
+<div class="store-subnav"><div><a href="{{ url_for('user_products') }}">All products</a><span>Easy returns</span><span>Secure shopping</span><span>Fresh deals every day</span></div></div>
+{% endif %}
+
+<main class="app-shell">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="flash flash-{{ category }}" role="alert">{{ message }}</div>
+      {% endfor %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+</main>
+
+<footer class="site-footer">
+    <div class="footer-inner">
+        <a class="brand footer-brand" href="{{ url_for('home') }}"><span class="brand-icon"><img src="{{ url_for('static', filename='images/r-logo.png') }}" alt=""></span><span>Smart<span>Cart</span></span></a>
+        <p>Ramesh made with <span aria-label="love">❤️</span> using Flask</p>
+        <p class="copyright">&copy; {{ now_year|default(2026) }} SmartCart. All rights reserved.</p>
+    </div>
+</footer>
+{% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% block title %}Complete Payment | SmartCart{% endblock %}
+{% block content %}
+<section class="card payment-card">
+    <span class="eyebrow">Secure checkout</span>
+    <h1>Complete your payment</h1>
+    <p>Your SmartCart order is ready. Razorpay will securely collect your payment details.</p>
+    <div class="delivery-summary"><strong>Deliver to</strong><span>{{ address.full_name }} &middot; {{ address.phone }}</span><span>{{ address.address_line }}, {{ address.city }}, {{ address.state }} {{ address.postal_code }}</span></div>
+    <div class="grand-total"><span>Amount due</span><strong>&#8377;{{ '%.2f'|format(amount_paise / 100) }}</strong></div>
+    <p class="payment-status" id="payment-status" role="status">Connecting to Razorpay&hellip;</p>
+    <button class="button" id="rzp-button" type="button" disabled>Open Razorpay</button>
+    <a class="text-button" href="{{ url_for('user_checkout') }}">Return to address</a>
+</section>
+
+<form id="payment-verification-form" method="post" action="{{ url_for('verify_payment') }}" hidden>
+    <input name="razorpay_payment_id" type="hidden">
+    <input name="razorpay_order_id" type="hidden">
+    <input name="razorpay_signature" type="hidden">
+</form>
+{% endblock %}
+{% block scripts %}
+<script>
+const verificationForm = document.getElementById("payment-verification-form");
+const paymentButton = document.getElementById("rzp-button");
+const paymentStatus = document.getElementById("payment-status");
+let checkout = null;
+let openedAutomatically = false;
+
+const options = {
+    key: {{ key_id|tojson }},
+    amount: {{ amount_paise|tojson }},
+    currency: "INR",
+    name: "SmartCart",
+    description: "Order payment",
+    order_id: {{ order_id|tojson }},
+    prefill: {
+        name: {{ address.full_name|tojson }},
+        email: {{ session.get('user_email', '')|tojson }},
+        contact: {{ address.phone|tojson }}
+    },
+    async handler(response) {
+        paymentButton.disabled = true;
+        paymentButton.textContent = "Verifying payment...";
+        paymentStatus.className = "payment-status payment-status-success";
+        paymentStatus.textContent = "Payment received. Confirming your order...";
+
+        verificationForm.elements.razorpay_payment_id.value = response.razorpay_payment_id || "";
+        verificationForm.elements.razorpay_order_id.value = response.razorpay_order_id || "";
+        verificationForm.elements.razorpay_signature.value = response.razorpay_signature || "";
+
+        try {
+            const formData = new FormData(verificationForm);
+            const verifyResponse = await fetch(verificationForm.action, {
+                method: "POST",
+                body: formData,
+                credentials: "same-origin"
+            });
+
+            const location = verifyResponse.headers.get("location");
+            if (verifyResponse.redirected || location) {
+                window.location.href = location || verifyResponse.url;
+                return;
+            }
+
+            if (verifyResponse.ok) {
+                window.location.href = "/user/my-orders";
+                return;
+            }
+
+            const text = await verifyResponse.text();
+            throw new Error(text || "We could not confirm your order right now.");
+        } catch (error) {
+            showPaymentError(error.message || "We could not confirm your order. Please contact support.");
+        }
+    },
+    modal: {
+        ondismiss() {
+            paymentButton.disabled = false;
+            paymentButton.textContent = "Open Razorpay";
+            paymentStatus.className = "payment-status";
+            paymentStatus.textContent = "Payment window closed. You can try again safely.";
+        }
+    },
+    retry: {enabled: true},
+    theme: {color: "#136f63"}
+};
+
+function showPaymentError(message) {
+    paymentButton.disabled = !checkout;
+    paymentButton.textContent = "Try payment again";
+    paymentStatus.className = "payment-status payment-status-error";
+    paymentStatus.textContent = message;
+}
+
+function openCheckout() {
+    if (!checkout) {
+        showPaymentError("Razorpay is still loading. Check your internet connection and try again.");
+        return;
+    }
+    paymentStatus.className = "payment-status";
+    paymentStatus.textContent = "Opening the secure Razorpay payment window...";
+    try {
+        checkout.open();
+    } catch (error) {
+        showPaymentError("The payment window could not open. Refresh this page and try again.");
+    }
+}
+
+paymentButton.addEventListener("click", openCheckout);
+
+const razorpayScript = document.createElement("script");
+razorpayScript.src = "https://checkout.razorpay.com/v1/checkout.js";
+razorpayScript.async = true;
+razorpayScript.onload = () => {
+    if (typeof window.Razorpay !== "function") {
+        showPaymentError("Razorpay did not load correctly. Refresh this page and try again.");
+        return;
+    }
+    checkout = new window.Razorpay(options);
+    checkout.on("payment.failed", (response) => {
+        const reason = response && response.error && response.error.description;
+        showPaymentError(reason || "Payment was not completed. No order was placed; please try again.");
+    });
+    paymentButton.disabled = false;
+    paymentButton.textContent = "Open Razorpay";
+    paymentStatus.textContent = "Razorpay is ready. Opening secure payment...";
+    if (!openedAutomatically) {
+        openedAutomatically = true;
+        openCheckout();
+    }
+};
+razorpayScript.onerror = () => {
+    showPaymentError("Could not connect to Razorpay. Check your internet connection or disable blocking extensions, then refresh.");
+};
+document.head.appendChild(razorpayScript);
+</script>
+{% endblock %}

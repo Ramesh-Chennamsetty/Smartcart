@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Registration | SmartCart{% endblock %}
+
+{% block content %}
+<section class="card auth-card">
+    <h1>Admin Registration</h1>
+    <p class="page-subtitle">Create an administrator account using email verification.</p>
+
+    <form method="POST" action="{{ url_for('admin_signup') }}">
+        <div class="field">
+            <label for="name">Name</label>
+            <input id="name" type="text" name="name" autocomplete="name" required>
+        </div>
+
+        <div class="field">
+            <label for="email">Email</label>
+            <input id="email" type="email" name="email" autocomplete="email" required>
+        </div>
+
+        <button type="submit">Send OTP</button>
+    </form>
+
+    <p class="muted">
+        Already registered?
+        <a href="{{ url_for('admin_login') }}">Login</a>
+    </p>
+</section>
+{% endblock %}

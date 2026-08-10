@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Order #{{ order.order_id }} | SmartCart{% endblock %}
+{% block content %}
+<section class="card payment-card payment-success">
+    <span class="eyebrow">Order confirmed</span>
+    <h1>Your order is confirmed!</h1>
+    <p>Thank you for shopping with SmartCart.</p>
+    <dl>
+        <div><dt>Order ID</dt><dd>#{{ order.order_id }}</dd></div>
+        <div><dt>Payment ID</dt><dd>{{ order.razorpay_payment_id }}</dd></div>
+        <div><dt>Amount paid</dt><dd>&#8377;{{ '%.2f'|format(order.amount) }}</dd></div>
+        <div><dt>Order date</dt><dd>{{ order.created_at }}</dd></div>
+    </dl>
+
+    <h2>Order summary</h2>
+    <div class="table-wrap">
+        <table>
+            <thead><tr><th>Product</th><th>Quantity</th><th>Price</th></tr></thead>
+            <tbody>
+            {% for item in items %}
+                <tr><td>{{ item.product_name }}</td><td>{{ item.quantity }}</td><td>&#8377;{{ '%.2f'|format(item.price) }}</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="product-actions">
+        <a class="button" href="{{ url_for('user_products') }}">Continue shopping</a>
+        <a class="button button-secondary" href="{{ url_for('my_orders') }}">View my orders</a>
+        <a class="button button-secondary" href="{{ url_for('download_invoice', order_id=order.order_id) }}">Download invoice</a>
+    </div>
+</section>
+{% endblock %}

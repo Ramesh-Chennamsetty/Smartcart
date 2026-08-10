@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard | SmartCart{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Welcome, {{ admin_name }}</h1>
+        <p class="page-subtitle">Manage your products and administrator profile.</p>
+    </div>
+</div>
+
+<section class="dashboard-grid">
+    <a class="dashboard-card" href="{{ url_for('view_products') }}">
+        <h3>Products</h3>
+        <p>Search, filter, view, edit, and delete products.</p>
+    </a>
+
+    <a class="dashboard-card" href="{{ url_for('add_item_page') }}">
+        <h3>Add Product</h3>
+        <p>Create a new product with its description, price, and image.</p>
+    </a>
+
+    <a class="dashboard-card" href="{{ url_for('admin_profile') }}">
+        <h3>Admin Profile</h3>
+        <p>Update your account details, password, and profile image.</p>
+    </a>
+</section>
+{% endblock %}

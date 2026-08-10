@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}{{ product.name }} | SmartCart{% endblock %}
+{% block content %}
+<nav class="breadcrumbs" aria-label="Breadcrumb"><a href="{{ url_for('user_dashboard') }}">Home</a><span>/</span><a href="{{ url_for('user_products') }}">Products</a><span>/</span><strong>{{ product.name }}</strong></nav>
+<article class="card product-detail">
+    <div class="product-detail-media"><span class="detail-badge">Top pick</span>{% if product.image %}<img src="{{ url_for('static', filename='uploads/product_images/' ~ product.image) }}" alt="{{ product.name }}">{% else %}<span>No image available</span>{% endif %}</div>
+    <div class="product-detail-copy"><span class="product-category">{{ product.category }}</span><h1>{{ product.name }}</h1><div class="detail-rating"><span>&#9733;&#9733;&#9733;&#9733;&#9733;</span> Customer favourite</div><p class="product-detail-description">{{ product.description }}</p><div class="detail-price-block"><small>SmartCart price</small><p class="product-detail-price"><sup>&#8377;</sup>{{ product.price }}</p><span>Inclusive of all taxes</span></div><div class="detail-actions"><button class="add-cart-button button-large" type="button" data-url="{{ url_for('add_to_cart', product_id=product.product_id) }}">Add to cart</button><form method="post" action="{{ url_for('add_to_cart', product_id=product.product_id) }}"><button class="button-buy button-large" type="submit">Buy now</button></form></div><div class="trust-row"><span>&#128274; Secure purchase</span><span>&#8635; Easy returns</span><span>&#10003; Quality checked</span></div></div>
+</article>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='cart.js') }}"></script>{% endblock %}

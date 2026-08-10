@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Verify OTP | SmartCart{% endblock %}
+
+{% block content %}
+<section class="card auth-card">
+    <h1>Verify OTP</h1>
+    <p class="page-subtitle">Enter the code sent to {{ email }} and create your password.</p>
+
+    <form method="POST" action="{{ url_for('verify_otp_post') }}">
+        <div class="field">
+            <label for="otp">Verification Code</label>
+            <input id="otp"
+                   type="text"
+                   name="otp"
+                   inputmode="numeric"
+                   maxlength="6"
+                   autocomplete="one-time-code"
+                   required>
+        </div>
+
+        <div class="field">
+            <label for="password">Password</label>
+            <input id="password"
+                   type="password"
+                   name="password"
+                   minlength="6"
+                   autocomplete="new-password"
+                   required>
+        </div>
+
+        <div class="field">
+            <label for="confirm_password">Confirm Password</label>
+            <input id="confirm_password"
+                   type="password"
+                   name="confirm_password"
+                   minlength="6"
+                   autocomplete="new-password"
+                   required>
+        </div>
+
+        <button type="submit">Verify and Register</button>
+    </form>
+
+    <br>
+    <form method="POST" action="{{ url_for('resend_otp') }}">
+        <button class="button-secondary" type="submit">Resend OTP</button>
+    </form>
+</section>
+{% endblock %}

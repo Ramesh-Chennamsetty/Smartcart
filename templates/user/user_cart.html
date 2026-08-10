@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Your Cart | SmartCart{% endblock %}
+{% block content %}
+<div class="cart-heading"><div><span class="eyebrow">Almost yours</span><h1>Shopping cart <small>{{ cart_count }} item{{ '' if cart_count == 1 else 's' }}</small></h1><p>Review your selection before moving ahead.</p></div><a href="{{ url_for('user_products') }}">&larr; Continue shopping</a></div>
+{% if cart_items %}
+<div class="cart-layout"><div class="cart-items">
+{% for item in cart_items %}
+<article class="card cart-item" data-cart-item data-quantity="{{ item.quantity }}" data-total="{{ '%.2f'|format(item.item_total) }}">
+    <label class="cart-item-selector"><input class="cart-item-checkbox" type="checkbox" checked aria-label="Select {{ item.name }} for checkout"><span aria-hidden="true"></span></label>
+    <div class="cart-item-image">{% if item.image %}<img src="{{ url_for('static', filename='uploads/product_images/' ~ item.image) }}" alt="{{ item.name }}">{% else %}<span>No image</span>{% endif %}</div>
+    <div class="cart-item-copy"><h2>{{ item.name }}</h2><p>&#8377;{{ '%.2f'|format(item.price) }} each</p>
+        <div class="quantity-controls"><form method="post" action="{{ url_for('decrease_cart_item', product_id=item.product_id) }}"><button aria-label="Decrease {{ item.name }} quantity">&minus;</button></form><strong>{{ item.quantity }}</strong><form method="post" action="{{ url_for('increase_cart_item', product_id=item.product_id) }}"><button aria-label="Increase {{ item.name }} quantity">+</button></form></div>
+        <form method="post" action="{{ url_for('remove_cart_item', product_id=item.product_id) }}"><button class="text-button" type="submit">Remove</button></form>
+    </div><strong class="cart-item-total">&#8377;{{ '%.2f'|format(item.item_total) }}</strong>
+</article>
+{% endfor %}
+</div><aside class="card cart-summary"><h2>Order summary</h2><div><span>Items (<span id="selected-cart-count">{{ cart_count }}</span>)</span><strong id="selected-subtotal">&#8377;{{ '%.2f'|format(grand_total) }}</strong></div><div><span>Delivery</span><strong class="free-delivery">FREE</strong></div><div class="grand-total"><span>Order total</span><strong id="selected-total">&#8377;{{ '%.2f'|format(grand_total) }}</strong></div><form method="post" action="{{ url_for('user_checkout') }}"><button id="checkout-button" type="submit">Proceed to checkout</button></form><p class="secure-note">&#128274; Secure checkout powered by Razorpay</p></aside></div>
+{% else %}<div class="card empty-state"><h2>Your cart is empty</h2><p>Add a product and it will appear here.</p><a class="button" href="{{ url_for('user_products') }}">Browse products</a></div>{% endif %}
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='cart.js') }}"></script>{% endblock %}
