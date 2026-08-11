@@ -38,7 +38,7 @@ const options = {
         email: {{ session.get('user_email', '')|tojson }},
         contact: {{ address.phone|tojson }}
     },
-    async handler(response) {
+    handler(response) {
         paymentButton.disabled = true;
         paymentButton.textContent = "Verifying payment...";
         paymentStatus.className = "payment-status payment-status-success";
@@ -48,30 +48,7 @@ const options = {
         verificationForm.elements.razorpay_order_id.value = response.razorpay_order_id || "";
         verificationForm.elements.razorpay_signature.value = response.razorpay_signature || "";
 
-        try {
-            const formData = new FormData(verificationForm);
-            const verifyResponse = await fetch(verificationForm.action, {
-                method: "POST",
-                body: formData,
-                credentials: "same-origin"
-            });
-
-            const location = verifyResponse.headers.get("location");
-            if (verifyResponse.redirected || location) {
-                window.location.href = location || verifyResponse.url;
-                return;
-            }
-
-            if (verifyResponse.ok) {
-                window.location.href = "/user/my-orders";
-                return;
-            }
-
-            const text = await verifyResponse.text();
-            throw new Error(text || "We could not confirm your order right now.");
-        } catch (error) {
-            showPaymentError(error.message || "We could not confirm your order. Please contact support.");
-        }
+        verificationForm.submit();
     },
     modal: {
         ondismiss() {
