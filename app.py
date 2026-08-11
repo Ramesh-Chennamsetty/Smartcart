@@ -58,12 +58,18 @@ class SQLiteConnectionWrapper:
         try:
             cur = self._conn.cursor()
             cur.execute("PRAGMA table_info(orders)")
-            existing_cols = {row[1] for row in cur.fetchall()}
+            rows = cur.fetchall()
+            existing_cols = set()
+            for r in rows:
+                if isinstance(r, dict) and 'name' in r:
+                    existing_cols.add(r['name'])
+                elif isinstance(r, (list, tuple)) and len(r) > 1:
+                    existing_cols.add(r[1])
             for col in ['full_name', 'phone', 'address_line', 'city', 'state', 'postal_code']:
-                if col and col not in existing_cols:
+                if col not in existing_cols:
                     self._conn.execute(f"ALTER TABLE orders ADD COLUMN {col} TEXT;")
         except Exception as e:
-            pass
+            print("Auto-migration error:", e)
         self._conn.commit()
 
     @staticmethod
@@ -1917,7 +1923,7 @@ def verify_payment():
             )
 
         conn.commit()
-    except Error as error:
+    except Exception as error:
         if conn:
             conn.rollback()
         app.logger.exception('Order storage failed: %s', error)
