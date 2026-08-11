@@ -42,10 +42,10 @@
                 <a class="{{ 'active' if request.endpoint == 'admin_profile' else '' }}" href="{{ url_for('admin_profile') }}">Profile</a>
                 <a class="nav-cta logout-nav-btn" href="{{ url_for('admin_logout') }}">Logout</a>
             {% elif session.get('user_id') %}
-                <a class="nav-cta {{ 'active' if request.endpoint == 'user_products' else '' }}" href="{{ url_for('user_products') }}">Shop Now</a>
-                <a class="{{ 'active' if request.endpoint in ['my_orders', 'order_success'] else '' }}" href="{{ url_for('my_orders') }}">My Orders</a>
+                <a class="{{ 'active' if request.endpoint == 'user_products' else '' }}" href="{{ url_for('user_products') }}">Shop Now</a>
+                <a class="{{ 'active' if request.endpoint in ['my_orders', 'order_success', 'update_order_address'] else '' }}" href="{{ url_for('my_orders') }}">My Orders</a>
                 <a class="cart-link {{ 'active' if request.endpoint == 'user_cart' else '' }}" href="{{ url_for('user_cart') }}"><span class="cart-icon">&#128722;</span><strong>Cart</strong><span class="cart-badge" id="cart-count">{{ cart_count }}</span></a>
-                <a class="logout-link logout-nav-btn" href="{{ url_for('user_logout') }}">Logout</a>
+                <a class="logout-nav-btn" href="{{ url_for('user_logout') }}">Logout</a>
             {% else %}
                 <a class="{{ 'active' if request.endpoint == 'admin_login' else '' }}" href="{{ url_for('admin_login') }}">Admin</a>
                 <a class="{{ 'active' if request.endpoint == 'user_login' else '' }}" href="{{ url_for('user_login') }}">User login</a>
