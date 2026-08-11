@@ -20,8 +20,17 @@
     box-sizing: border-box;
 }
 
+html {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
 body {
+    width: 100%;
+    max-width: 100%;
     margin: 0;
+    padding: 0;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -30,6 +39,7 @@ body {
     font-family: Manrope, "Segoe UI", Arial, sans-serif;
     line-height: 1.6;
     overflow-x: hidden;
+    position: relative;
 }
 
 a {
@@ -580,7 +590,7 @@ tbody tr:hover {
     }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 960px) {
     .nav-toggle-label {
         display: flex;
     }
