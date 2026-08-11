@@ -25,13 +25,13 @@
             <button type="submit" aria-label="Search">Search</button>
         </form>
         {% endif %}
-        <!-- Hamburger menu controls -->
-        <input type="checkbox" id="nav-toggle" class="nav-toggle" aria-label="Toggle navigation">
-        <label for="nav-toggle" class="nav-toggle-label">
-            <span class="hamburger-line"></span>
-            <span class="hamburger-line"></span>
-            <span class="hamburger-line"></span>
-        </label>
+        <!-- Unified Mobile Navigation Toggle Button -->
+        <button class="nav-toggle" onclick="toggleMenu()" aria-label="Toggle Navigation">
+            <span class="bar"></span>
+            <span class="bar"></span>
+            <span class="bar"></span>
+        </button>
+        <input type="checkbox" id="nav-toggle" class="nav-toggle-checkbox" style="display:none;" aria-label="Toggle navigation">
 
         <nav class="nav-links" aria-label="Primary navigation">
             <a class="{{ 'active' if request.endpoint == 'home' else '' }}" href="{{ url_for('home') }}">Home</a>
@@ -75,6 +75,14 @@
         <p class="copyright">&copy; {{ now_year|default(2026) }} SmartCart. All rights reserved.</p>
     </div>
 </footer>
+<script>
+    function toggleMenu() {
+        const navLinks = document.querySelector('.nav-links');
+        const navToggle = document.querySelector('.nav-toggle');
+        if (navLinks) navLinks.classList.toggle('active');
+        if (navToggle) navToggle.classList.toggle('active');
+    }
+</script>
 {% block scripts %}{% endblock %}
 </body>
 </html>

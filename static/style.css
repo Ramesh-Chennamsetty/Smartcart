@@ -859,5 +859,214 @@ input, select, textarea, button {
     font-size: 16px; /* Prevents auto-zoom on iOS Safari */
 }
 
+/* =========================================================
+   SHREENATH RESPONSIVE ENGINE (shreenath.pythonanywhere.com)
+   ========================================================= */
+
+.nav-toggle {
+    display: none;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 24px;
+    height: 18px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    z-index: 101;
+}
+
+.nav-toggle .bar {
+    width: 100%;
+    height: 3px;
+    background-color: #ffffff;
+    border-radius: 2px;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 768px) {
+    .main-content, .app-shell, .storefront .app-shell {
+        padding: 1.5rem 0.5rem;
+        width: 100%;
+    }
+    
+    .container {
+        width: 100%;
+    }
+
+    .details-container, .product-detail {
+        grid-template-columns: 1fr !important;
+        gap: 2rem;
+    }
+}
+
+@media (max-width: 600px) {
+    /* Navbar stack */
+    .navbar, .topbar, .store-topbar {
+        padding: 0.75rem 1rem;
+    }
+    
+    .nav-container, .store-topbar .nav-container {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+    }
+    
+    .nav-toggle {
+        display: flex;
+    }
+    
+    /* Hamburger to X animation */
+    .nav-toggle.active .bar:nth-child(1),
+    #nav-toggle:checked + .nav-toggle-label .hamburger-line:nth-child(1) {
+        transform: translateY(7px) rotate(45deg);
+    }
+    .nav-toggle.active .bar:nth-child(2),
+    #nav-toggle:checked + .nav-toggle-label .hamburger-line:nth-child(2) {
+        opacity: 0;
+    }
+    .nav-toggle.active .bar:nth-child(3),
+    #nav-toggle:checked + .nav-toggle-label .hamburger-line:nth-child(3) {
+        transform: translateY(-8px) rotate(-45deg);
+    }
+
+    .nav-links {
+        display: none;
+        width: 100%;
+        flex-direction: column;
+        gap: 0.5rem;
+        margin-top: 1rem;
+        text-align: center;
+        background-color: #223352;
+        padding: 1rem 0;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .nav-links.active, #nav-toggle:checked ~ .nav-links {
+        display: flex !important;
+        animation: slideDown 0.25s ease-out;
+    }
+    
+    .nav-links a {
+        padding: 0.5rem 1rem;
+        font-size: 0.95rem;
+        width: 100%;
+        display: block;
+    }
+
+    /* Cards */
+    .card, .welcome-card {
+        padding: 1.25rem;
+        border-radius: 8px;
+    }
+    
+    /* Headings sizing */
+    h2 {
+        font-size: 1.4rem;
+        margin-bottom: 1rem;
+    }
+    
+    h1 {
+        font-size: 1.8rem !important;
+    }
+
+    /* Controls Bar Responsive */
+    .controls-bar, .catalogue-filter, .toolbar {
+        padding: 1rem;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+    }
+    
+    .search-input-group, .category-select-group, .header-search {
+        width: 100%;
+        min-width: 0;
+    }
+
+    /* Responsive Tables as Cards */
+    .responsive-table, 
+    .responsive-table thead, 
+    .responsive-table tbody, 
+    .responsive-table th, 
+    .responsive-table td, 
+    .responsive-table tr,
+    table, thead, tbody, th, td, tr {
+        display: block;
+    }
+    
+    table thead, .responsive-table thead {
+        display: none;
+    }
+    
+    table tr, .responsive-table tr {
+        margin-bottom: 1rem;
+        border: 1px solid var(--border, #e2e8f0);
+        border-radius: 8px;
+        background-color: #ffffff;
+        padding: 0.5rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+    
+    table td, .responsive-table td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid var(--border, #e2e8f0);
+        padding: 0.75rem 0.5rem;
+        text-align: right !important;
+    }
+    
+    table td:last-child, .responsive-table td:last-child {
+        border-bottom: none;
+        justify-content: center;
+    }
+
+    /* Product grid gap and columns */
+    .products-grid, .product-grid, .storefront .product-grid {
+        grid-template-columns: 1fr !important;
+        gap: 1.25rem;
+    }
+
+    /* Details layout */
+    .details-container, .product-detail {
+        padding: 1.25rem;
+        gap: 1.5rem;
+        grid-template-columns: 1fr !important;
+    }
+    
+    /* Footer responsiveness */
+    .footer, .site-footer {
+        padding: 1.2rem 1rem;
+    }
+    
+    .footer-container, .footer-inner {
+        flex-direction: column;
+        align-items: center;
+        gap: 0.75rem;
+        text-align: center;
+    }
+
+    .footer-links {
+        justify-content: center;
+        width: 100%;
+        gap: 1rem;
+    }
+}
+
+
 
 
