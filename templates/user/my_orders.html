@@ -6,11 +6,23 @@
 <div class="order-list">
     {% for order in orders %}
     <article class="card order-card">
-        <div><span class="eyebrow">Order #{{ order.order_id }}</span><h2>&#8377;{{ '%.2f'|format(order.amount) }}</h2></div>
-        <p><strong>Status:</strong> {{ order.payment_status|title }}</p>
+        <div class="order-card-header"><span class="eyebrow">Order #{{ order.order_id }}</span><h2>&#8377;{{ '%.2f'|format(order.amount) }}</h2></div>
+        <p><strong>Status:</strong> <span class="badge">{{ order.payment_status|title }}</span></p>
         <p><strong>Placed:</strong> {{ order.created_at }}</p>
+
+        <div class="delivery-summary">
+            <strong>Delivery Address:</strong>
+            {% if order.full_name or order.address_line %}
+                <span><strong>{{ order.full_name }}</strong> {% if order.phone %}(Ph: {{ order.phone }}){% endif %}</span>
+                <span>{{ order.address_line }}, {{ order.city }}, {{ order.state }} - {{ order.postal_code }}</span>
+            {% else %}
+                <span><em>No address saved for this order</em></span>
+            {% endif %}
+        </div>
+
         <div class="product-actions">
-            <a class="button button-secondary" href="{{ url_for('order_success', database_order_id=order.order_id) }}">View order details</a>
+            <a class="button button-secondary" href="{{ url_for('order_success', database_order_id=order.order_id) }}">View details</a>
+            <a class="button button-secondary" href="{{ url_for('update_order_address', order_id=order.order_id) }}">Change Address</a>
             <a class="button button-secondary" href="{{ url_for('download_invoice', order_id=order.order_id) }}" download>Download invoice</a>
         </div>
     </article>

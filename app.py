@@ -55,6 +55,15 @@ class SQLiteConnectionWrapper:
             role TEXT NOT NULL
         );
         """)
+        try:
+            cur = self._conn.cursor()
+            cur.execute("PRAGMA table_info(orders)")
+            existing_cols = {row[1] for row in cur.fetchall()}
+            for col in ['full_name', 'phone', 'address_line', 'city', 'state', 'postal_code']:
+                if col and col not in existing_cols:
+                    self._conn.execute(f"ALTER TABLE orders ADD COLUMN {col} TEXT;")
+        except Exception as e:
+            pass
         self._conn.commit()
 
     @staticmethod
@@ -101,6 +110,7 @@ app.secret_key = config.SECRET_KEY
 
 app.config["SESSION_COOKIE_HTTPONLY"] = True
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+app.config["PERMANENT_SESSION_LIFETIME"] = datetime.timedelta(days=30)
 app.config["MAX_CONTENT_LENGTH"] = 8 * 1024 * 1024
 
 
@@ -770,6 +780,7 @@ def admin_login():
     session["admin_id"] = admin["admin_id"]
     session["admin_name"] = admin["name"]
     session["admin_email"] = admin["email"]
+    session.permanent = True
 
     flash("Login successful.", "success")
     return redirect("/admin-dashboard")
@@ -1455,6 +1466,7 @@ def user_login():
     session['user_id'] = user['user_id']
     session['user_name'] = user['name']
     session['user_email'] = user['email']
+    session.permanent = True
     flash('Login successful.', 'success')
     return redirect('/user-dashboard')
 
@@ -1874,13 +1886,20 @@ def verify_payment():
                 f"/user/order-success/{existing_order['order_id']}"
             )
 
+        address = session.get('shipping_address', {})
         cursor.execute(
             'INSERT INTO orders '
-            '(user_id, razorpay_order_id, razorpay_payment_id, amount, payment_status) '
-            'VALUES (%s, %s, %s, %s, %s)',
+            '(user_id, razorpay_order_id, razorpay_payment_id, amount, payment_status, full_name, phone, address_line, city, state, postal_code) '
+            'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',
             (
                 session['user_id'], order_id, payment_id,
-                expected_amount / 100, 'paid'
+                expected_amount / 100, 'paid',
+                address.get('full_name', ''),
+                address.get('phone', ''),
+                address.get('address_line', ''),
+                address.get('city', ''),
+                address.get('state', ''),
+                address.get('postal_code', '')
             )
         )
         database_order_id = cursor.lastrowid
@@ -2012,6 +2031,70 @@ def download_invoice(order_id):
         download_name=f"invoice_{order_id}.pdf",
         mimetype="application/pdf"
     )
+
+
+@app.route('/user/order/<int:order_id>/update-address', methods=['GET', 'POST'])
+def update_order_address(order_id):
+    if 'user_id' not in session:
+        flash('Please login to update your order address.', 'danger')
+        return redirect('/user-login')
+
+    conn = None
+    cursor = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute(
+            'SELECT * FROM orders WHERE order_id = %s AND user_id = %s',
+            (order_id, session['user_id'])
+        )
+        order = cursor.fetchone()
+        if not order:
+            flash('Order not found.', 'danger')
+            return redirect('/user/my-orders')
+
+        if request.method == 'GET':
+            return render_template('user/update_order_address.html', order=order)
+
+        full_name = request.form.get('full_name', '').strip()
+        phone = request.form.get('phone', '').strip()
+        address_line = request.form.get('address_line', '').strip()
+        city = request.form.get('city', '').strip()
+        state = request.form.get('state', '').strip()
+        postal_code = request.form.get('postal_code', '').strip()
+
+        if not all([full_name, phone, address_line, city, state, postal_code]):
+            flash('Please fill in all address fields.', 'danger')
+            return render_template('user/update_order_address.html', order=order)
+
+        if not phone.isdigit() or not 10 <= len(phone) <= 15:
+            flash('Enter a valid phone number containing 10 to 15 digits.', 'danger')
+            return render_template('user/update_order_address.html', order=order)
+
+        if not postal_code.isdigit() or not 4 <= len(postal_code) <= 10:
+            flash('Enter a valid postal code.', 'danger')
+            return render_template('user/update_order_address.html', order=order)
+
+        cursor.execute(
+            '''UPDATE orders 
+               SET full_name = %s, phone = %s, address_line = %s, city = %s, state = %s, postal_code = %s 
+               WHERE order_id = %s AND user_id = %s''',
+            (full_name, phone, address_line, city, state, postal_code, order_id, session['user_id'])
+        )
+        conn.commit()
+        flash('Order delivery address updated successfully!', 'success')
+        return redirect(url_for('my_orders'))
+    except Error as error:
+        if conn:
+            conn.rollback()
+        app.logger.exception('Failed to update order address: %s', error)
+        flash('Unable to update order address.', 'danger')
+        return redirect('/user/my-orders')
+    finally:
+        if cursor:
+            cursor.close()
+        if conn and conn.is_connected():
+            conn.close()
 
 
 @app.route('/user/my-orders')

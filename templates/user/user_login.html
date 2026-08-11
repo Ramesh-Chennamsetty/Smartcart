@@ -10,9 +10,13 @@
         <div class="field">
             <label for="password">Password</label>
             <input id="password" name="password" type="password" autocomplete="current-password" required>
-            <div style="margin-top: 8px; text-align: right;">
-                <a href="{{ url_for('forgot_password', role='user') }}" style="font-size: 0.85rem;">Forgot Password?</a>
-            </div>
+        </div>
+        <div class="field" style="display: flex; justify-content: space-between; align-items: center; margin: 12px 0 20px; flex-wrap: wrap; gap: 10px;">
+            <label for="remember" style="display: flex; align-items: center; gap: 8px; font-weight: 500; cursor: pointer; margin: 0;">
+                <input id="remember" name="remember" type="checkbox" checked style="width: 18px; height: 18px; accent-color: var(--primary);">
+                <span>Remember me on this device</span>
+            </label>
+            <a href="{{ url_for('forgot_password', role='user') }}" style="font-size: 0.85rem;">Forgot Password?</a>
         </div>
         <button type="submit">Login</button>
     </form>

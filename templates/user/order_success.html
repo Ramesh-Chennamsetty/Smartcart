@@ -12,6 +12,16 @@
         <div><dt>Order date</dt><dd>{{ order.created_at }}</dd></div>
     </dl>
 
+    <div class="delivery-summary">
+        <strong>Delivery Address:</strong>
+        {% if order.full_name or order.address_line %}
+            <span><strong>{{ order.full_name }}</strong> {% if order.phone %}(Ph: {{ order.phone }}){% endif %}</span>
+            <span>{{ order.address_line }}, {{ order.city }}, {{ order.state }} - {{ order.postal_code }}</span>
+        {% else %}
+            <span><em>No address saved for this order</em></span>
+        {% endif %}
+    </div>
+
     <h2>Order summary</h2>
     <div class="table-wrap">
         <table>
@@ -25,6 +35,7 @@
     </div>
     <div class="product-actions">
         <a class="button" href="{{ url_for('user_products') }}">Continue shopping</a>
+        <a class="button button-secondary" href="{{ url_for('update_order_address', order_id=order.order_id) }}">Change Address</a>
         <a class="button button-secondary" href="{{ url_for('my_orders') }}">View my orders</a>
         <a class="button button-secondary" href="{{ url_for('download_invoice', order_id=order.order_id) }}" download>Download invoice</a>
     </div>

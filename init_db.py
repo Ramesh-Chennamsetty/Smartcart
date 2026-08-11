@@ -55,6 +55,12 @@ def init_db():
         razorpay_payment_id TEXT UNIQUE,
         amount REAL,
         payment_status TEXT NOT NULL DEFAULT 'legacy',
+        full_name TEXT,
+        phone TEXT,
+        address_line TEXT,
+        city TEXT,
+        state TEXT,
+        postal_code TEXT,
         created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (user_id) REFERENCES susers(user_id)
     );

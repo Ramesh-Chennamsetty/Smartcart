@@ -8,6 +8,9 @@
         <h1>Welcome, {{ admin_name }}</h1>
         <p class="page-subtitle">Manage your products and administrator profile.</p>
     </div>
+    <div>
+        <a class="button button-danger" href="{{ url_for('admin_logout') }}">Logout</a>
+    </div>
 </div>
 
 <section class="dashboard-grid">
@@ -24,6 +27,11 @@
     <a class="dashboard-card" href="{{ url_for('admin_profile') }}">
         <h3>Admin Profile</h3>
         <p>Update your account details, password, and profile image.</p>
+    </a>
+
+    <a class="dashboard-card dashboard-card-logout" href="{{ url_for('admin_logout') }}">
+        <h3>Logout</h3>
+        <p>Sign out of administrator session safely.</p>
     </a>
 </section>
 {% endblock %}

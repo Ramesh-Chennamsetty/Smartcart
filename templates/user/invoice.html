@@ -22,9 +22,29 @@
             <p><strong>Date:</strong> {{ order.created_at }}</p>
         </div>
 
-        <h3>Customer Details</h3>
-        <p class="meta"><strong>User ID:</strong> {{ order.user_id }}</p>
-        <p class="meta"><strong>Payment Status:</strong> {{ order.payment_status|title }}</p>
+        <table style="width: 100%; border: none; margin: 15px 0 25px;">
+            <tr>
+                <td style="width: 50%; vertical-align: top; border: none; padding: 0 10px 0 0;">
+                    <h3>Customer & Order Info</h3>
+                    <p class="meta"><strong>User ID:</strong> #{{ order.user_id }}</p>
+                    <p class="meta"><strong>Payment Status:</strong> {{ order.payment_status|title }}</p>
+                    {% if order.razorpay_payment_id %}
+                    <p class="meta"><strong>Payment ID:</strong> {{ order.razorpay_payment_id }}</p>
+                    {% endif %}
+                </td>
+                <td style="width: 50%; vertical-align: top; border: none; padding: 0 0 0 10px;">
+                    <h3>Shipping Address</h3>
+                    {% if order.full_name or order.address_line %}
+                    <p class="meta"><strong>Recipient:</strong> {{ order.full_name }}</p>
+                    <p class="meta"><strong>Phone:</strong> {{ order.phone }}</p>
+                    <p class="meta"><strong>Address:</strong> {{ order.address_line }}</p>
+                    <p class="meta"><strong>City/State/PIN:</strong> {{ order.city }}, {{ order.state }} - {{ order.postal_code }}</p>
+                    {% else %}
+                    <p class="meta"><em>Standard Delivery Address</em></p>
+                    {% endif %}
+                </td>
+            </tr>
+        </table>
 
         <h3>Items</h3>
         <table>

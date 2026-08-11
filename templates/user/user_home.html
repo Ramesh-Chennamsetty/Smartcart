@@ -6,5 +6,15 @@
     <div class="shop-hero-art" aria-hidden="true"><div class="hero-orbit orbit-one"></div><div class="hero-orbit orbit-two"></div><div class="hero-bag">S<span>mart</span></div><div class="price-bubble"><small>Deals from</small><strong>&#8377;99</strong></div></div>
 </section>
 <section class="benefit-strip" aria-label="Shopping benefits"><div><b>&#10003;</b><span><strong>Trusted quality</strong><small>Products chosen with care</small></span></div><div><b>&#8635;</b><span><strong>Easy returns</strong><small>Simple and stress-free</small></span></div><div><b>&#128274;</b><span><strong>Secure shopping</strong><small>Your session stays protected</small></span></div><div><b>&#9889;</b><span><strong>Quick cart</strong><small>Add products instantly</small></span></div></section>
-<section class="dashboard-welcome"><div><span class="eyebrow">Made for you</span><h2>Welcome back, {{ user_name }}!</h2><p>Ready to find your next favourite?</p></div><a href="{{ url_for('user_products') }}">Explore the catalogue &rarr;</a></section>
+<section class="dashboard-welcome">
+    <div>
+        <span class="eyebrow">Made for you</span>
+        <h2>Welcome back, {{ user_name }}!</h2>
+        <p>Ready to find your next favourite?</p>
+    </div>
+    <div class="user-welcome-actions">
+        <a class="button" href="{{ url_for('user_products') }}">Explore the catalogue &rarr;</a>
+        <a class="button button-danger" href="{{ url_for('user_logout') }}">Logout</a>
+    </div>
+</section>
 {% endblock %}

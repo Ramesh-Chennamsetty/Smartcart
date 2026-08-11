@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Change Order Address #{{ order.order_id }} | SmartCart{% endblock %}
+{% block content %}
+<section class="card checkout-card">
+    <span class="eyebrow">Update Delivery Address</span>
+    <h1>Change Order #{{ order.order_id }} Address</h1>
+    <p class="page-subtitle">Update where this order should be delivered.</p>
+    <form method="post" action="{{ url_for('update_order_address', order_id=order.order_id) }}">
+        <div class="checkout-form-grid">
+            <div class="field full-width">
+                <label for="full_name">Full Name</label>
+                <input id="full_name" name="full_name" type="text" autocomplete="name" required maxlength="100" value="{{ order.full_name or '' }}">
+            </div>
+            <div class="field full-width">
+                <label for="phone">Phone Number</label>
+                <input id="phone" name="phone" type="tel" inputmode="numeric" autocomplete="tel" required minlength="10" maxlength="15" pattern="[0-9]{10,15}" value="{{ order.phone or '' }}">
+            </div>
+            <div class="field full-width">
+                <label for="address_line">Street Address</label>
+                <textarea id="address_line" name="address_line" autocomplete="street-address" required maxlength="250" placeholder="House or flat number, street, area, landmark">{{ order.address_line or '' }}</textarea>
+            </div>
+            <div class="field">
+                <label for="city">City</label>
+                <input id="city" name="city" type="text" autocomplete="address-level2" required maxlength="80" value="{{ order.city or '' }}">
+            </div>
+            <div class="field">
+                <label for="state">State</label>
+                <input id="state" name="state" type="text" autocomplete="address-level1" required maxlength="80" value="{{ order.state or '' }}">
+            </div>
+            <div class="field full-width">
+                <label for="postal_code">Postal / PIN Code</label>
+                <input id="postal_code" name="postal_code" type="text" inputmode="numeric" autocomplete="postal-code" required minlength="4" maxlength="10" pattern="[0-9]{4,10}" value="{{ order.postal_code or '' }}">
+            </div>
+        </div>
+        <div class="checkout-actions">
+            <a class="button button-secondary" href="{{ url_for('my_orders') }}">Cancel</a>
+            <button type="submit">Save New Address</button>
+        </div>
+    </form>
+</section>
+{% endblock %}
