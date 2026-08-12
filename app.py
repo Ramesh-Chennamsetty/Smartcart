@@ -14,6 +14,10 @@ class SQLiteCursorWrapper:
         return self._cursor.lastrowid
 
     @property
+    def rowcount(self):
+        return self._cursor.rowcount
+
+    @property
     def description(self):
         return self._cursor.description
 
@@ -38,39 +42,161 @@ class SQLiteCursorWrapper:
     def fetchall(self):
         return self._cursor.fetchall()
 
+    def fetchmany(self, size=None):
+        if size is not None:
+            return self._cursor.fetchmany(size)
+        return self._cursor.fetchmany()
+
     def close(self):
         self._cursor.close()
 
+
+def init_and_migrate_db(db_path):
+    """
+    Separate DB Initialization & Schema Migration.
+    Runs once at application startup to ensure tables and columns exist
+    without executing DDL statements on every connection request.
+    Includes a automatic database backup prior to migration.
+    """
+    if os.path.exists(db_path):
+        backup_path = f"{db_path}.bak"
+        try:
+            import shutil
+            if not os.path.exists(backup_path):
+                shutil.copy2(db_path, backup_path)
+        except Exception as backup_err:
+            print("Backup warning:", backup_err)
+
+    conn = sqlite3.connect(db_path, timeout=30.0)
+    try:
+        conn.execute("PRAGMA journal_mode=WAL;")
+        conn.execute("PRAGMA busy_timeout=30000;")
+    except Exception as e:
+        print("PRAGMA setup warning:", e)
+
+    conn.execute("""
+    CREATE TABLE IF NOT EXISTS eadmin (
+        admin_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT,
+        email TEXT UNIQUE,
+        password TEXT,
+        profile_image TEXT
+    );
+    """)
+
+    conn.execute("""
+    CREATE TABLE IF NOT EXISTS susers (
+        user_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT,
+        email TEXT UNIQUE,
+        password TEXT
+    );
+    """)
+
+    conn.execute("""
+    CREATE TABLE IF NOT EXISTS products (
+        product_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT,
+        description TEXT,
+        category TEXT,
+        price REAL,
+        image TEXT
+    );
+    """)
+
+    conn.execute("""
+    CREATE TABLE IF NOT EXISTS orders (
+        order_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        total_amount REAL,
+        user_id INTEGER,
+        razorpay_order_id TEXT UNIQUE,
+        razorpay_payment_id TEXT UNIQUE,
+        amount REAL,
+        payment_status TEXT NOT NULL DEFAULT 'legacy',
+        full_name TEXT,
+        phone TEXT,
+        address_line TEXT,
+        city TEXT,
+        state TEXT,
+        postal_code TEXT,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES susers(user_id)
+    );
+    """)
+
+    conn.execute("""
+    CREATE TABLE IF NOT EXISTS order_items (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        order_id INTEGER NOT NULL,
+        product_id INTEGER NOT NULL,
+        product_name TEXT NOT NULL,
+        quantity INTEGER NOT NULL,
+        price REAL NOT NULL,
+        FOREIGN KEY (order_id) REFERENCES orders(order_id) ON DELETE CASCADE,
+        FOREIGN KEY (product_id) REFERENCES products(product_id)
+    );
+    """)
+
+    conn.execute("""
+    CREATE TABLE IF NOT EXISTS password_resets (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        email TEXT NOT NULL,
+        token TEXT NOT NULL,
+        expiry TEXT NOT NULL,
+        role TEXT NOT NULL
+    );
+    """)
+
+    try:
+        cur = conn.cursor()
+        cur.execute("PRAGMA table_info(orders)")
+        rows = cur.fetchall()
+        existing_cols = set()
+        for r in rows:
+            if isinstance(r, dict) and 'name' in r:
+                existing_cols.add(r['name'])
+            elif isinstance(r, (list, tuple)) and len(r) > 1:
+                existing_cols.add(r[1])
+        for col in ['full_name', 'phone', 'address_line', 'city', 'state', 'postal_code']:
+            if col not in existing_cols:
+                conn.execute(f"ALTER TABLE orders ADD COLUMN {col} TEXT;")
+
+        cur.execute("PRAGMA table_info(products)")
+        prod_rows = cur.fetchall()
+        existing_prod_cols = set()
+        for r in prod_rows:
+            if isinstance(r, dict) and 'name' in r:
+                existing_prod_cols.add(r['name'])
+            elif isinstance(r, (list, tuple)) and len(r) > 1:
+                existing_prod_cols.add(r[1])
+        prod_col_types = {
+            'name': 'TEXT',
+            'description': 'TEXT',
+            'category': 'TEXT',
+            'price': 'REAL',
+            'image': 'TEXT'
+        }
+        for col, col_type in prod_col_types.items():
+            if col not in existing_prod_cols:
+                conn.execute(f"ALTER TABLE products ADD COLUMN {col} {col_type};")
+    except Exception as e:
+        print("Auto-migration warning:", e)
+
+    conn.commit()
+    conn.close()
+
+
 class SQLiteConnectionWrapper:
     def __init__(self, db_path):
-        self._conn = sqlite3.connect(db_path, check_same_thread=False)
+        self._conn = sqlite3.connect(db_path, timeout=30.0, check_same_thread=False)
         self._conn.row_factory = self._dict_factory
-        # Ensure password_resets table is created automatically
-        self._conn.execute("""
-        CREATE TABLE IF NOT EXISTS password_resets (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            email TEXT NOT NULL,
-            token TEXT NOT NULL,
-            expiry TEXT NOT NULL,
-            role TEXT NOT NULL
-        );
-        """)
+
+        # Set WAL mode and busy_timeout for fast, non-blocking concurrent access
         try:
-            cur = self._conn.cursor()
-            cur.execute("PRAGMA table_info(orders)")
-            rows = cur.fetchall()
-            existing_cols = set()
-            for r in rows:
-                if isinstance(r, dict) and 'name' in r:
-                    existing_cols.add(r['name'])
-                elif isinstance(r, (list, tuple)) and len(r) > 1:
-                    existing_cols.add(r[1])
-            for col in ['full_name', 'phone', 'address_line', 'city', 'state', 'postal_code']:
-                if col not in existing_cols:
-                    self._conn.execute(f"ALTER TABLE orders ADD COLUMN {col} TEXT;")
+            self._conn.execute("PRAGMA journal_mode=WAL;")
+            self._conn.execute("PRAGMA busy_timeout=30000;")
         except Exception as e:
-            print("Auto-migration error:", e)
-        self._conn.commit()
+            print("PRAGMA setup warning:", e)
 
     @staticmethod
     def _dict_factory(cursor, row):
@@ -160,8 +286,14 @@ def get_razorpay_client():
 # =========================================================
 
 def get_db_connection():
-    db_path = os.path.join(os.path.dirname(__file__), "smartcart.db")
+    db_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "smartcart.db"))
     return SQLiteConnectionWrapper(db_path)
+
+# Initialize and migrate database schema once at application startup
+try:
+    init_and_migrate_db(os.path.abspath(os.path.join(os.path.dirname(__file__), "smartcart.db")))
+except Exception as startup_db_err:
+    print("Startup DB initialization warning:", startup_db_err)
 
 
 
@@ -899,6 +1031,15 @@ def add_item():
         return redirect('/admin/add-item')
 
     try:
+        price_num = float(price)
+        if price_num < 0:
+            flash("Price must be a valid positive number.", "danger")
+            return redirect('/admin/add-item')
+    except ValueError:
+        flash("Price must be a valid number.", "danger")
+        return redirect('/admin/add-item')
+
+    try:
         filename = save_image(image_file, app.config['UPLOAD_FOLDER'])
     except ValueError as error:
         flash(str(error), "danger")
@@ -915,12 +1056,12 @@ def add_item():
             INSERT INTO products (name, description, category, price, image)
             VALUES (%s, %s, %s, %s, %s)
             """,
-            (name, description, category, price, filename)
+            (name, description, category, price_num, filename)
         )
         conn.commit()
 
-    except Error as error:
-        print("Database error:", error)
+    except Exception as error:
+        app.logger.exception("ADD PRODUCT DATABASE ERROR")
         if conn:
             conn.rollback()
         remove_uploaded_image(app.config['UPLOAD_FOLDER'], filename)
@@ -1313,42 +1454,43 @@ def delete_item(item_id):
         flash("Please login!", "danger")
         return redirect('/admin-login')
 
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    cursor.execute(
-        "SELECT image FROM products WHERE product_id = %s",
-        (item_id,)
-    )
-    product = cursor.fetchone()
+    conn = None
+    cursor = None
+    deleted_rows = 0
+    image_name = None
 
-    if not product:
-        cursor.close()
-        conn.close()
-        flash("Product not found!", "danger")
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute(
+            "SELECT image FROM products WHERE product_id = %s",
+            (item_id,)
+        )
+        product = cursor.fetchone()
+
+        if not product:
+            flash("Product not found!", "danger")
+            return redirect('/admin/products')
+
+        image_name = product.get("image")
+        cursor.execute("DELETE FROM products WHERE product_id = %s", (item_id,))
+        deleted_rows = cursor.rowcount
+        conn.commit()
+
+    except Exception as error:
+        app.logger.exception("DELETE PRODUCT DATABASE ERROR")
+        if conn:
+            conn.rollback()
+        flash("Unable to delete product. Please try again.", "danger")
         return redirect('/admin/products')
 
-    cursor.execute("DELETE FROM products WHERE product_id = %s", (item_id,))
-    deleted_rows = cursor.rowcount
+    finally:
+        if cursor:
+            cursor.close()
+        if conn and conn.is_connected():
+            conn.close()
 
     if deleted_rows:
-        cursor.execute("SELECT product_id FROM products ORDER BY product_id ASC")
-        product_ids = [row["product_id"] for row in cursor.fetchall()]
-
-        for new_id, old_id in enumerate(product_ids, start=1):
-            if new_id != old_id:
-                cursor.execute(
-                    "UPDATE products SET product_id = %s WHERE product_id = %s",
-                    (new_id, old_id)
-                )
-
-        cursor.execute("ALTER TABLE products AUTO_INCREMENT = 1")
-
-    conn.commit()
-    cursor.close()
-    conn.close()
-
-    if deleted_rows:
-        image_name = product.get("image")
         remove_uploaded_image(app.config['UPLOAD_FOLDER'], image_name)
         flash("Product deleted successfully!", "success")
     else:
